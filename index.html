@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator with History on the Right</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #000;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .calculator {
+            background: transparent;
+            border: 5px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            width: 450px; /* Increased width */
+            box-shadow: 0 0 20px #333, inset 0 0 20px #333;
+            transition: 0.5s;
+        }
+
+        .calculator:hover {
+            border: 5px solid #0ef;
+            box-shadow: 0 0 20px #0ef, inset 0 0 20px #0ef;
+        }
+
+        .display {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: transparent;
+            border-bottom: 2px solid #fff;
+            color: #fff;
+            text-align: right;
+            transition: 0.5s;
+            word-wrap: break-word; /* Prevents text overflow */
+        }
+
+        .calculator:hover .display {
+            border-bottom: 2px solid #0ef;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .buttons button {
+            font-size: 1.5em;
+            padding: 20px;
+            color: #fff;
+            background-color: transparent;
+            border: 2px solid #333;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .buttons button:hover {
+            border: 2px solid #0ef;
+            box-shadow: 0 0 10px #0ef, inset 0 0 10px #0ef;
+        }
+
+        .buttons button:active {
+            transform: scale(0.95);
+        }
+
+        .operator {
+            color: #0ef;
+        }
+
+        .equals {
+            background-color: #0ef;
+            color: #000;
+            border: none;
+        }
+
+        .equals:hover {
+            background-color: #0cf;
+        }
+
+        /* History Section */
+        .history {
+            color: #fff;
+            max-width: 300px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px #333;
+        }
+
+        .history h3 {
+            text-align: center;
+            color: #0ef;
+            margin-bottom: 10px;
+        }
+
+        .history ul {
+            list-style: none;
+            padding: 0;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .history ul li {
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            margin-bottom: 5px;
+            border-radius: 5px;
+            font-size: 1.1em;
+        }
+
+        .clear-history-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+            color: #fff;
+            background-color: #0ef;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .clear-history-btn:hover {
+            background-color: #0cf;
+        }
+
+        /* Responsive behavior */
+        @media (max-width: 800px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .history {
+                max-width: 90%;
+            }
+
+            .calculator, .history {
+                width: 100%;
+            }
+
+            .buttons button {
+                font-size: 1.2em;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="calculator">
+            <div class="display" id="display">0</div>
+            <div class="buttons">
+                <button onclick="clearDisplay()">C</button>
+                <button onclick="deleteLast()">DEL</button>
+                <button onclick="appendOperator('/')">/</button>
+                <button onclick="appendOperator('*')">*</button>
+                <button onclick="appendNumber(7)">7</button>
+                <button onclick="appendNumber(8)">8</button>
+                <button onclick="appendNumber(9)">9</button>
+                <button onclick="appendOperator('-')">-</button>
+                <button onclick="appendNumber(4)">4</button>
+                <button onclick="appendNumber(5)">5</button>
+                <button onclick="appendNumber(6)">6</button>
+                <button onclick="appendOperator('+')">+</button>
+                <button onclick="appendNumber(1)">1</button>
+                <button onclick="appendNumber(2)">2</button>
+                <button onclick="appendNumber(3)">3</button>
+                <button class="equals" onclick="calculateResult()">=</button>
+                <button onclick="appendNumber(0)" style="grid-column: span 2;">0</button>
+                <button onclick="appendNumber('.')">.</button>
+            </div>
+        </div>
+
+        <div class="history">
+            <h3>Calculation History</h3>
+            <ul id="history-list"></ul>
+            <button class="clear-history-btn" onclick="clearHistory()">Clear History</button> <!-- Clear History Button -->
+        </div>
+    </div>
+
+    <script>
+        let display = document.getElementById('display');
+        let currentInput = '0';
+        let historyList = document.getElementById('history-list');
+
+        function updateDisplay() {
+            display.textContent = currentInput;
+        }
+
+        function clearDisplay() {
+            currentInput = '0';
+            updateDisplay();
+        }
+
+        function deleteLast() {
+            currentInput = currentInput.slice(0, -1);
+            if (currentInput === '') {
+                currentInput = '0';
+            }
+            updateDisplay();
+        }
+
+        function appendNumber(number) {
+            if (currentInput === '0') {
+                currentInput = number.toString();
+            } else {
+                currentInput += number;
+            }
+            updateDisplay();
+        }
+
+        function appendOperator(operator) {
+            currentInput += operator;
+            updateDisplay();
+        }
+
+        function calculateResult() {
+            try {
+                let result = eval(currentInput).toString();
+                addHistory(currentInput + ' = ' + result);
+                currentInput = result;
+            } catch (error) {
+                currentInput = 'Error';
+            }
+            updateDisplay();
+        }
+
+        function addHistory(entry) {
+            let li = document.createElement('li');
+            li.textContent = entry;
+            historyList.appendChild(li);
+        }
+
+        function clearHistory() {
+            historyList.innerHTML = '';
+        }
+    </script>
+
+</body>
+</html>
